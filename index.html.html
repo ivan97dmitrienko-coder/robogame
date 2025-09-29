@@ -1,0 +1,328 @@
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=no" />
+  <title>Прыгай, Робо!</title>
+  <style>
+    * {
+      margin: 0;
+      padding: 0;
+      box-sizing: border-box;
+      touch-action: manipulation;
+    }
+
+    body {
+      background: #0f0c29;
+      color: white;
+      font-family: Arial, sans-serif;
+      overflow: hidden;
+      height: 100vh;
+      display: flex;
+      justify-content: center;
+      align-items: center;
+    }
+
+    #gameContainer {
+      position: relative;
+      width: 100vw;
+      height: 100vh;
+      max-width: 500px;
+      max-height: 800px;
+      margin: 0 auto;
+    }
+
+    #gameCanvas {
+      display: block;
+      background: #1a1a3a;
+    }
+
+    #startScreen, #gameOverScreen {
+      position: absolute;
+      top: 0;
+      left: 0;
+      width: 100%;
+      height: 100%;
+      display: flex;
+      flex-direction: column;
+      justify-content: center;
+      align-items: center;
+      background: rgba(15, 12, 41, 0.95);
+      z-index: 10;
+      text-align: center;
+      padding: 20px;
+    }
+
+    .hidden {
+      display: none !important;
+    }
+
+    h1 {
+      font-size: 28px;
+      margin-bottom: 16px;
+      color: #4fc3f7;
+    }
+
+    h2 {
+      font-size: 22px;
+      margin-bottom: 20px;
+      color: #ffeb3b;
+    }
+
+    p {
+      margin: 10px 0;
+      font-size: 16px;
+      line-height: 1.4;
+    }
+
+    button {
+      margin-top: 20px;
+      padding: 12px 28px;
+      font-size: 18px;
+      background: #ff6b6b;
+      color: white;
+      border: none;
+      border-radius: 10px;
+      cursor: pointer;
+      font-weight: bold;
+    }
+
+    button:hover {
+      background: #ff5252;
+    }
+
+    a {
+      color: #4fc3f7;
+      text-decoration: none;
+      margin-top: 20px;
+      display: inline-block;
+      font-size: 16px;
+      font-weight: bold;
+    }
+
+    a:hover {
+      text-decoration: underline;
+    }
+  </style>
+</head>
+<body>
+  <div id="gameContainer">
+    <canvas id="gameCanvas"></canvas>
+
+    <div id="startScreen">
+      <h1>Прыгай, Робо!</h1>
+      <p>Нажми в любой момент, чтобы прыгнуть<br>и собрать космические звёздочки!</p>
+      <button id="startBtn">▶ Начать игру</button>
+    </div>
+
+    <div id="gameOverScreen" class="hidden">
+      <h2 id="resultText">Ты собрал 0 звёзд!</h2>
+      <button id="restartBtn">🔁 Играть снова</button>
+      <p>
+        <a href="https://ваш-сайт.рф?utm_source=bus_qr&utm_medium=game" target="_blank">
+          Хочешь больше таких игр? Запишись на курс!
+        </a>
+      </p>
+    </div>
+  </div>
+
+  <script>
+    // === ИГРОВОЙ КОД ===
+    const canvas = document.getElementById('gameCanvas');
+    const ctx = canvas.getContext('2d');
+
+    // Адаптация под экран
+    function resizeCanvas() {
+      const maxWidth = Math.min(window.innerWidth, 500);
+      const maxHeight = Math.min(window.innerHeight, 800);
+      canvas.width = maxWidth;
+      canvas.height = maxHeight;
+    }
+    window.addEventListener('resize', resizeCanvas);
+    resizeCanvas();
+
+    // Элементы UI
+    const startScreen = document.getElementById('startScreen');
+    const gameOverScreen = document.getElementById('gameOverScreen');
+    const resultText = document.getElementById('resultText');
+    const startBtn = document.getElementById('startBtn');
+    const restartBtn = document.getElementById('restartBtn');
+
+    // Игровые состояния
+    let gameRunning = false;
+    let score = 0;
+    let gameTime = 0;
+    const GAME_DURATION = 60; // секунд
+
+    // Робот
+    const robot = {
+      x: 50,
+      y: 0,
+      width: 36,
+      height: 36,
+      vy: 0,
+      onGround: false
+    };
+
+    // Платформы и звёзды
+    let platforms = [];
+    let stars = [];
+
+    // Инициализация уровня
+    function initGame() {
+      score = 0;
+      gameTime = 0;
+      robot.y = canvas.height - 100;
+      robot.vy = 0;
+      robot.onGround = true;
+
+      // Основная платформа (пол)
+      platforms = [
+        { x: 0, y: canvas.height - 40, width: canvas.width }
+      ];
+
+      // Генерация звёзд
+      stars = [];
+      const starCount = 10;
+      for (let i = 0; i < starCount; i++) {
+        stars.push({
+          x: 120 + i * 70 + Math.random() * 50,
+          y: canvas.height - 120 - Math.random() * 300,
+          collected: false
+        });
+      }
+    }
+
+    // Прыжок
+    function jump() {
+      if (robot.onGround) {
+        robot.vy = -13;
+        robot.onGround = false;
+      }
+    }
+
+    // Обработка кликов и касаний
+    canvas.addEventListener('click', () => { if (gameRunning) jump(); });
+    canvas.addEventListener('touchstart', (e) => {
+      e.preventDefault();
+      if (gameRunning) jump();
+    });
+
+    // Кнопки
+    startBtn.addEventListener('click', () => {
+      startScreen.classList.add('hidden');
+      initGame();
+      gameRunning = true;
+      requestAnimationFrame(gameLoop);
+    });
+
+    restartBtn.addEventListener('click', () => {
+      gameOverScreen.classList.add('hidden');
+      initGame();
+      gameRunning = true;
+      requestAnimationFrame(gameLoop);
+    });
+
+    // Обновление логики игры
+    function update() {
+      if (!gameRunning) return;
+
+      gameTime += 1 / 60;
+
+      // Гравитация
+      robot.vy += 0.6;
+      robot.y += robot.vy;
+
+      // Проверка приземления
+      robot.onGround = false;
+      for (const p of platforms) {
+        if (
+          robot.x + robot.width > p.x &&
+          robot.x < p.x + p.width &&
+          robot.y + robot.height <= p.y &&
+          robot.y + robot.height + robot.vy >= p.y
+        ) {
+          robot.y = p.y - robot.height;
+          robot.vy = 0;
+          robot.onGround = true;
+        }
+      }
+
+      // Сбор звёзд
+      for (const star of stars) {
+        if (!star.collected) {
+          const dx = (robot.x + robot.width / 2) - (star.x + 10);
+          const dy = (robot.y + robot.height / 2) - (star.y + 10);
+          const distance = Math.sqrt(dx * dx + dy * dy);
+          if (distance < 30) {
+            star.collected = true;
+            score++;
+          }
+        }
+      }
+
+      // Проверка завершения
+      if (robot.y > canvas.height || gameTime >= GAME_DURATION) {
+        endGame();
+      }
+    }
+
+    // Отрисовка
+    function draw() {
+      ctx.clearRect(0, 0, canvas.width, canvas.height);
+
+      // Фоновые звёзды (декор)
+      ctx.fillStyle = '#ffffff';
+      for (let i = 0; i < 30; i++) {
+        const x = Math.random() * canvas.width;
+        const y = Math.random() * (canvas.height - 100);
+        ctx.fillRect(x, y, 1, 1);
+      }
+
+      // Робот (простой, но узнаваемый)
+      ctx.fillStyle = '#4fc3f7';
+      ctx.fillRect(robot.x, robot.y, robot.width, robot.height);
+      // Глаз
+      ctx.fillStyle = '#000';
+      ctx.fillRect(robot.x + 24, robot.y + 8, 6, 6);
+
+      // Платформы
+      ctx.fillStyle = '#4caf50';
+      for (const p of platforms) {
+        ctx.fillRect(p.x, p.y, p.width, 16);
+      }
+
+      // Собираемые звёзды
+      ctx.fillStyle = '#ffeb3b';
+      for (const star of stars) {
+        if (!star.collected) {
+          ctx.beginPath();
+          ctx.arc(star.x + 10, star.y + 10, 10, 0, Math.PI * 2);
+          ctx.fill();
+        }
+      }
+
+      // Интерфейс: счёт и таймер
+      ctx.fillStyle = 'white';
+      ctx.font = '16px Arial';
+      ctx.fillText(`Звёзд: ${score}/10`, 12, 24);
+      ctx.fillText(`Время: ${Math.max(0, Math.floor(GAME_DURATION - gameTime))} с`, 12, 44);
+    }
+
+    // Завершение игры
+    function endGame() {
+      gameRunning = false;
+      resultText.textContent = `Ты собрал ${score} из 10 звёзд!`;
+      gameOverScreen.classList.remove('hidden');
+    }
+
+    // Главный игровой цикл
+    function gameLoop() {
+      if (!gameRunning) return;
+      update();
+      draw();
+      requestAnimationFrame(gameLoop);
+    }
+  </script>
+</body>
+</html>
