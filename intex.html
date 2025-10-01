@@ -1,0 +1,363 @@
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Угадай число</title>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            max-width: 600px;
+            margin: 50px auto;
+            padding: 20px;
+            text-align: center;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            min-height: 100vh;
+        }
+        
+        .screen {
+            background: white;
+            padding: 40px;
+            border-radius: 15px;
+            box-shadow: 0 10px 30px rgba(0,0,0,0.3);
+            display: none;
+        }
+        
+        .active {
+            display: block;
+        }
+        
+        .game-container {
+            background: white;
+            padding: 30px;
+            border-radius: 15px;
+            box-shadow: 0 10px 30px rgba(0,0,0,0.2);
+        }
+        
+        input[type="number"] {
+            padding: 12px;
+            font-size: 18px;
+            width: 120px;
+            margin: 15px;
+            border: 2px solid #ddd;
+            border-radius: 8px;
+            text-align: center;
+        }
+        
+        button {
+            padding: 15px 30px;
+            font-size: 18px;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            color: white;
+            border: none;
+            border-radius: 8px;
+            cursor: pointer;
+            margin: 10px;
+            transition: all 0.3s;
+            font-weight: bold;
+        }
+        
+        button:hover {
+            transform: scale(1.05);
+            box-shadow: 0 5px 15px rgba(0,0,0,0.2);
+        }
+        
+        #message {
+            margin: 20px 0;
+            font-size: 20px;
+            font-weight: bold;
+            min-height: 30px;
+            padding: 15px;
+            border-radius: 8px;
+        }
+        
+        #attempts {
+            color: #666;
+            margin: 15px 0;
+            font-size: 18px;
+        }
+        
+        #previousGuesses {
+            margin: 15px 0;
+            font-size: 16px;
+            color: #888;
+        }
+        
+        /* ИЗМЕНЕНО: Заменил желтый на фиолетовый с градиентом */
+        .victory {
+            color: #8A2BE2;
+            text-shadow: 1px 1px 2px rgba(0,0,0,0.2);
+            font-size: 24px;
+            background: linear-gradient(135deg, #8A2BE2 0%, #4B0082 100%);
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+            font-weight: bold;
+        }
+        
+        .game-stats {
+            background: #f8f9fa;
+            padding: 20px;
+            border-radius: 10px;
+            margin: 20px 0;
+        }
+        
+        .welcome-title {
+            font-size: 36px;
+            color: #333;
+            margin-bottom: 20px;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+        }
+        
+        .welcome-text {
+            font-size: 18px;
+            color: #666;
+            margin-bottom: 30px;
+            line-height: 1.6;
+        }
+        
+        .final-screen {
+            background: linear-gradient(135deg, #fffde4 0%, #d9ffd9 100%);
+        }
+        
+        /* ИЗМЕНЕНО: Заменил желтый на зеленый для заголовка победы */
+        .final-title {
+            font-size: 32px;
+            color: #2ecc71;
+            margin-bottom: 20px;
+            text-shadow: 2px 2px 4px rgba(0,0,0,0.1);
+        }
+        
+        .offer-text {
+            font-size: 20px;
+            color: #333;
+            margin: 25px 0;
+            line-height: 1.6;
+        }
+        
+        .cta-button {
+            background: linear-gradient(135deg, #ff6b6b 0%, #ee5a24 100%);
+            font-size: 20px;
+            padding: 18px 35px;
+            margin: 20px 0;
+        }
+        
+        .school-link {
+            display: inline-block;
+            background: linear-gradient(135deg, #4834d4 0%, #130f40 100%);
+            color: white;
+            padding: 15px 30px;
+            border-radius: 8px;
+            text-decoration: none;
+            font-size: 18px;
+            margin: 15px 0;
+            transition: all 0.3s;
+        }
+        
+        .school-link:hover {
+            transform: scale(1.05);
+            box-shadow: 0 5px 15px rgba(0,0,0,0.3);
+        }
+        
+        .emoji {
+            font-size: 48px;
+            margin: 20px 0;
+        }
+        
+        /* ИЗМЕНЕНО: Новый стиль для выделения важного текста */
+        .highlight {
+            color: #e74c3c;
+            font-weight: bold;
+            background: linear-gradient(135deg, #e74c3c 0%, #c0392b 100%);
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+        }
+        
+        /* ИЗМЕНЕНО: Стиль для статистики в финале */
+        .final-stats {
+            color: #2c3e50;
+            font-size: 20px;
+            font-weight: bold;
+            margin: 10px 0;
+        }
+    </style>
+</head>
+<body>
+    <!-- Приветственный экран -->
+    <div id="welcomeScreen" class="screen active">
+        <div class="emoji">🎯</div>
+        <h1 class="welcome-title">Добро пожаловать в игру "Угадай число"!</h1>
+        <p class="welcome-text">
+            Я загадал число от 1 до 100.<br>
+            Попробуй угадать его за минимальное количество попыток!<br>
+            После каждой попытки я подскажу, больше или меньше твоё число.
+        </p>
+        <button onclick="startGame()">🎮 Начать игру</button>
+    </div>
+
+    <!-- Игровой экран -->
+    <div id="gameScreen" class="screen">
+        <div class="game-container">
+            <h1>🎯 Угадай число</h1>
+            <p>Я загадал число от 1 до 100. Попробуй угадать!</p>
+            
+            <div id="gameArea">
+                <div>
+                    <input type="number" id="guessInput" min="1" max="100" placeholder="Введите число">
+                    <button onclick="checkGuess()">Проверить</button>
+                </div>
+                
+                <div id="message"></div>
+                
+                <div class="game-stats">
+                    <div id="attempts">Попытки: 0</div>
+                    <div id="previousGuesses">Предыдущие попытки: </div>
+                </div>
+                
+                <button onclick="showWelcomeScreen()">← Назад</button>
+            </div>
+        </div>
+    </div>
+
+    <!-- Финальный экран -->
+    <div id="finalScreen" class="screen final-screen">
+        <div class="emoji">🏆</div>
+        <h1 class="final-title">ТЫ ПОБЕДИЛ!</h1>
+        
+        <div id="finalStats" class="game-stats">
+            <!-- ИЗМЕНЕНО: Добавил классы для лучшего отображения статистики -->
+            <div id="finalAttempts" class="final-stats"></div>
+            <div id="finalNumber" class="final-stats"></div>
+        </div>
+        
+        <p class="offer-text">
+            Хочешь перейти на новый уровень?<br>
+            <span class="highlight">Научим создавать такие игры за один урок!</span>
+        </p>
+        
+        <a href="https://vk.com/kiberonesykt" target="_blank" class="school-link">
+            🚀 Забронировать место в школе программирования
+        </a>
+        
+        <div style="margin: 25px 0;">
+            <button onclick="newGame()">🔄 Играть ещё раз</button>
+            <button onclick="showWelcomeScreen()">🏠 В главное меню</button>
+        </div>
+    </div>
+
+    <script>
+        let secretNumber;
+        let attempts;
+        let previousGuesses;
+        let gameActive;
+
+        // Показать приветственный экран
+        function showWelcomeScreen() {
+            document.getElementById('welcomeScreen').classList.add('active');
+            document.getElementById('gameScreen').classList.remove('active');
+            document.getElementById('finalScreen').classList.remove('active');
+        }
+
+        // Начать игру
+        function startGame() {
+            document.getElementById('welcomeScreen').classList.remove('active');
+            document.getElementById('gameScreen').classList.add('active');
+            document.getElementById('finalScreen').classList.remove('active');
+            
+            newGame();
+        }
+
+        // Показать финальный экран
+        function showFinalScreen() {
+            document.getElementById('welcomeScreen').classList.remove('active');
+            document.getElementById('gameScreen').classList.remove('active');
+            document.getElementById('finalScreen').classList.add('active');
+            
+            // Обновляем статистику на финальном экране
+            document.getElementById('finalAttempts').textContent = `Ты угадал число за ${attempts} попыток!`;
+            document.getElementById('finalNumber').textContent = `Загаданное число: ${secretNumber}`;
+        }
+
+        // Начало новой игры
+        function newGame() {
+            secretNumber = Math.floor(Math.random() * 100) + 1;
+            attempts = 0;
+            previousGuesses = [];
+            gameActive = true;
+            
+            // Сброс интерфейса
+            document.getElementById('message').textContent = '';
+            document.getElementById('message').className = '';
+            document.getElementById('attempts').textContent = 'Попытки: 0';
+            document.getElementById('previousGuesses').textContent = 'Предыдущие попытки: ';
+            document.getElementById('guessInput').value = '';
+            document.getElementById('guessInput').disabled = false;
+            document.getElementById('guessInput').focus();
+            
+            // Переходим на игровой экран
+            document.getElementById('welcomeScreen').classList.remove('active');
+            document.getElementById('gameScreen').classList.add('active');
+            document.getElementById('finalScreen').classList.remove('active');
+            
+            console.log('Загаданное число:', secretNumber);
+        }
+
+        // Проверка предположения
+        function checkGuess() {
+            if (!gameActive) return;
+            
+            const guessInput = document.getElementById('guessInput');
+            const message = document.getElementById('message');
+            const attemptsElement = document.getElementById('attempts');
+            const previousGuessesElement = document.getElementById('previousGuesses');
+            
+            const guess = parseInt(guessInput.value);
+            
+            // Проверка валидности ввода
+            if (isNaN(guess) || guess < 1 || guess > 100) {
+                message.textContent = 'Пожалуйста, введите число от 1 до 100!';
+                message.style.color = 'red';
+                return;
+            }
+            
+            attempts++;
+            previousGuesses.push(guess);
+            
+            // Проверка числа
+            if (guess === secretNumber) {
+                // ИЗМЕНЕНО: Убрал желтый цвет из сообщения о победе
+                message.innerHTML = `🎉 <span class="victory">Поздравляю!</span> Вы угадали число <span class="victory">${secretNumber}</span> за <span class="victory">${attempts}</span> попыток! 🎉`;
+                message.style.color = 'green';
+                guessInput.disabled = true;
+                gameActive = false;
+                
+                // Показываем финальный экран через 2 секунды
+                setTimeout(showFinalScreen, 2000);
+            } else if (guess < secretNumber) {
+                message.textContent = '📉 Слишком маленькое число! Попробуйте ещё.';
+                message.style.color = 'blue';
+            } else {
+                message.textContent = '📈 Слишком большое число! Попробуйте ещё.';
+                message.style.color = 'blue';
+            }
+            
+            attemptsElement.textContent = `Попытки: ${attempts}`;
+            previousGuessesElement.textContent = `Предыдущие попытки: ${previousGuesses.join(', ')}`;
+            
+            guessInput.value = '';
+            guessInput.focus();
+        }
+
+        // Обработка нажатия Enter
+        document.getElementById('guessInput').addEventListener('keypress', function(event) {
+            if (event.key === 'Enter') {
+                checkGuess();
+            }
+        });
+
+        // Начинаем с приветственного экрана
+        window.onload = showWelcomeScreen;
+    </script>
+</body>
+</html>
