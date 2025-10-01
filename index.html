@@ -1,0 +1,497 @@
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Угадай число</title>
+    <style>
+        * {
+            box-sizing: border-box;
+        }
+        
+        body {
+            font-family: Arial, sans-serif;
+            max-width: 600px;
+            margin: 0 auto;
+            padding: 10px;
+            text-align: center;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            min-height: 100vh;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+        }
+        
+        .screen {
+            background: white;
+            padding: 15px;
+            border-radius: 12px;
+            box-shadow: 0 8px 20px rgba(0,0,0,0.2);
+            display: none;
+            width: 100%;
+            max-height: 85vh;
+            overflow-y: auto;
+        }
+        
+        .active {
+            display: block;
+        }
+        
+        .game-container {
+            background: white;
+            padding: 15px;
+            border-radius: 12px;
+            box-shadow: 0 8px 20px rgba(0,0,0,0.1);
+            width: 100%;
+        }
+        
+        input[type="number"] {
+            padding: 10px;
+            font-size: 16px;
+            width: 100%;
+            max-width: 140px;
+            margin: 10px 0;
+            border: 2px solid #ddd;
+            border-radius: 6px;
+            text-align: center;
+        }
+        
+        button {
+            padding: 10px 15px;
+            font-size: 14px;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            color: white;
+            border: none;
+            border-radius: 6px;
+            cursor: pointer;
+            margin: 8px 5px;
+            transition: all 0.3s;
+            font-weight: bold;
+            width: 100%;
+            max-width: 180px;
+        }
+        
+        button:hover {
+            transform: scale(1.05);
+            box-shadow: 0 5px 15px rgba(0,0,0,0.2);
+        }
+        
+        #message {
+            margin: 12px 0;
+            font-size: 16px;
+            font-weight: bold;
+            min-height: 25px;
+            padding: 10px;
+            border-radius: 6px;
+            word-wrap: break-word;
+        }
+        
+        #attempts {
+            color: #666;
+            margin: 8px 0;
+            font-size: 14px;
+        }
+        
+        #previousGuesses {
+            margin: 8px 0;
+            font-size: 13px;
+            color: #888;
+            word-wrap: break-word;
+            max-height: 60px;
+            overflow-y: auto;
+        }
+        
+        .victory {
+            color: #8A2BE2;
+            text-shadow: 1px 1px 2px rgba(0,0,0,0.2);
+            font-size: 18px;
+            background: linear-gradient(135deg, #8A2BE2 0%, #4B0082 100%);
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+            font-weight: bold;
+        }
+        
+        .game-stats {
+            background: #f8f9fa;
+            padding: 12px;
+            border-radius: 8px;
+            margin: 12px 0;
+        }
+        
+        .welcome-title {
+            font-size: 22px;
+            color: #333;
+            margin-bottom: 12px;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+            line-height: 1.2;
+        }
+        
+        .welcome-text {
+            font-size: 14px;
+            color: #666;
+            margin-bottom: 15px;
+            line-height: 1.4;
+        }
+        
+        .final-screen {
+            background: linear-gradient(135deg, #fffde4 0%, #d9ffd9 100%);
+            padding: 15px;
+        }
+        
+        .final-title {
+            font-size: 22px;
+            color: #2ecc71;
+            margin-bottom: 12px;
+            text-shadow: 2px 2px 4px rgba(0,0,0,0.1);
+            line-height: 1.2;
+        }
+        
+        .offer-text {
+            font-size: 14px;
+            color: #333;
+            margin: 12px 0;
+            line-height: 1.4;
+        }
+        
+        .cta-button {
+            background: linear-gradient(135deg, #ff6b6b 0%, #ee5a24 100%);
+            font-size: 14px;
+            padding: 12px 20px;
+            margin: 12px 0;
+        }
+        
+        .school-link {
+            display: inline-block;
+            background: linear-gradient(135deg, #4834d4 0%, #130f40 100%);
+            color: white;
+            padding: 10px 15px;
+            border-radius: 6px;
+            text-decoration: none;
+            font-size: 14px;
+            margin: 8px 0;
+            transition: all 0.3s;
+            width: 100%;
+            max-width: 280px;
+        }
+        
+        .school-link:hover {
+            transform: scale(1.05);
+            box-shadow: 0 5px 15px rgba(0,0,0,0.3);
+        }
+        
+        .emoji {
+            font-size: 28px;
+            margin: 10px 0;
+        }
+        
+        .highlight {
+            color: #e74c3c;
+            font-weight: bold;
+            background: linear-gradient(135deg, #e74c3c 0%, #c0392b 100%);
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+        }
+        
+        .final-stats {
+            color: #2c3e50;
+            font-size: 14px;
+            font-weight: bold;
+            margin: 6px 0;
+        }
+        
+        /* Компактные стили для игрового экрана */
+        .compact-game .game-container {
+            padding: 12px;
+        }
+        
+        .compact-game h1 {
+            font-size: 20px;
+            margin: 8px 0;
+        }
+        
+        .compact-game p {
+            font-size: 14px;
+            margin: 8px 0;
+        }
+        
+        /* Медиа-запросы для адаптации под разные экраны */
+        @media (max-width: 480px) {
+            body {
+                padding: 8px;
+            }
+            
+            .screen {
+                padding: 12px;
+                max-height: 82vh;
+            }
+            
+            .game-container {
+                padding: 12px;
+            }
+            
+            .welcome-title {
+                font-size: 20px;
+            }
+            
+            .final-title {
+                font-size: 20px;
+            }
+            
+            button {
+                padding: 8px 12px;
+                font-size: 13px;
+                max-width: 160px;
+            }
+            
+            .school-link {
+                font-size: 13px;
+                padding: 8px 12px;
+                max-width: 250px;
+            }
+            
+            .emoji {
+                font-size: 24px;
+            }
+            
+            input[type="number"] {
+                max-width: 120px;
+                padding: 8px;
+                font-size: 14px;
+            }
+        }
+        
+        @media (max-width: 360px) {
+            .welcome-title {
+                font-size: 18px;
+            }
+            
+            .final-title {
+                font-size: 18px;
+            }
+            
+            .welcome-text, .offer-text {
+                font-size: 13px;
+            }
+            
+            button {
+                padding: 7px 10px;
+                font-size: 12px;
+                max-width: 140px;
+            }
+            
+            .emoji {
+                font-size: 22px;
+            }
+            
+            #message {
+                font-size: 14px;
+                padding: 8px;
+                margin: 8px 0;
+            }
+        }
+        
+        /* Для очень маленьких экранов */
+        @media (max-height: 600px) {
+            .screen {
+                max-height: 78vh;
+                padding: 10px;
+            }
+            
+            .emoji {
+                font-size: 20px;
+                margin: 5px 0;
+            }
+            
+            .welcome-title, .final-title {
+                font-size: 18px;
+                margin-bottom: 8px;
+            }
+            
+            .welcome-text, .offer-text {
+                margin-bottom: 10px;
+            }
+            
+            button {
+                margin: 5px 3px;
+                padding: 8px 10px;
+            }
+        }
+    </style>
+</head>
+<body>
+    <!-- Приветственный экран -->
+    <div id="welcomeScreen" class="screen active">
+        <div class="emoji">🎯</div>
+        <h1 class="welcome-title">Добро пожаловать в игру "Угадай число"!</h1>
+        <p class="welcome-text">
+            Я загадал число от 1 до 100.<br>
+            Попробуй угадать его за минимальное количество попыток!
+        </p>
+        <button onclick="startGame()">🎮 Начать игру</button>
+    </div>
+
+    <!-- Игровой экран -->
+    <div id="gameScreen" class="screen compact-game">
+        <div class="game-container">
+            <h1>🎯 Угадай число</h1>
+            <p>Я загадал число от 1 до 100. Попробуй угадать!</p>
+            
+            <div id="gameArea">
+                <div>
+                    <input type="number" id="guessInput" min="1" max="100" placeholder="Введите число">
+                    <button onclick="checkGuess()">Проверить</button>
+                </div>
+                
+                <div id="message"></div>
+                
+                <div class="game-stats">
+                    <div id="attempts">Попытки: 0</div>
+                    <div id="previousGuesses">Предыдущие попытки: </div>
+                </div>
+                
+                <button onclick="showWelcomeScreen()">← Назад</button>
+            </div>
+        </div>
+    </div>
+
+    <!-- Финальный экран -->
+    <div id="finalScreen" class="screen final-screen">
+        <div class="emoji">🏆</div>
+        <h1 class="final-title">ТЫ ПОБЕДИЛ!</h1>
+        
+        <div id="finalStats" class="game-stats">
+            <div id="finalAttempts" class="final-stats"></div>
+            <div id="finalNumber" class="final-stats"></div>
+        </div>
+        
+        <p class="offer-text">
+            Хочешь перейти на новый уровень?<br>
+            <span class="highlight">Научим создавать такие игры за один урок!</span>
+        </p>
+        
+        <a href="https://vk.com/kiberonesykt" target="_blank" class="school-link">
+            🚀 Забронировать место в школе программирования
+        </a>
+        
+        <div style="margin: 15px 0;">
+            <button onclick="newGame()">🔄 Играть ещё раз</button>
+            <button onclick="showWelcomeScreen()">🏠 В главное меню</button>
+        </div>
+    </div>
+
+    <script>
+        let secretNumber;
+        let attempts;
+        let previousGuesses;
+        let gameActive;
+
+        // Показать приветственный экран
+        function showWelcomeScreen() {
+            document.getElementById('welcomeScreen').classList.add('active');
+            document.getElementById('gameScreen').classList.remove('active');
+            document.getElementById('finalScreen').classList.remove('active');
+        }
+
+        // Начать игру
+        function startGame() {
+            document.getElementById('welcomeScreen').classList.remove('active');
+            document.getElementById('gameScreen').classList.add('active');
+            document.getElementById('finalScreen').classList.remove('active');
+            
+            newGame();
+        }
+
+        // Показать финальный экран
+        function showFinalScreen() {
+            document.getElementById('welcomeScreen').classList.remove('active');
+            document.getElementById('gameScreen').classList.remove('active');
+            document.getElementById('finalScreen').classList.add('active');
+            
+            // Обновляем статистику на финальном экране
+            document.getElementById('finalAttempts').textContent = `Ты угадал число за ${attempts} попыток!`;
+            document.getElementById('finalNumber').textContent = `Загаданное число: ${secretNumber}`;
+        }
+
+        // Начало новой игры
+        function newGame() {
+            secretNumber = Math.floor(Math.random() * 100) + 1;
+            attempts = 0;
+            previousGuesses = [];
+            gameActive = true;
+            
+            // Сброс интерфейса
+            document.getElementById('message').textContent = '';
+            document.getElementById('message').className = '';
+            document.getElementById('attempts').textContent = 'Попытки: 0';
+            document.getElementById('previousGuesses').textContent = 'Предыдущие попытки: ';
+            document.getElementById('guessInput').value = '';
+            document.getElementById('guessInput').disabled = false;
+            document.getElementById('guessInput').focus();
+            
+            // Переходим на игровой экран
+            document.getElementById('welcomeScreen').classList.remove('active');
+            document.getElementById('gameScreen').classList.add('active');
+            document.getElementById('finalScreen').classList.remove('active');
+            
+            console.log('Загаданное число:', secretNumber);
+        }
+
+        // Проверка предположения
+        function checkGuess() {
+            if (!gameActive) return;
+            
+            const guessInput = document.getElementById('guessInput');
+            const message = document.getElementById('message');
+            const attemptsElement = document.getElementById('attempts');
+            const previousGuessesElement = document.getElementById('previousGuesses');
+            
+            const guess = parseInt(guessInput.value);
+            
+            // Проверка валидности ввода
+            if (isNaN(guess) || guess < 1 || guess > 100) {
+                message.textContent = 'Пожалуйста, введите число от 1 до 100!';
+                message.style.color = 'red';
+                return;
+            }
+            
+            attempts++;
+            previousGuesses.push(guess);
+            
+            // Проверка числа
+            if (guess === secretNumber) {
+                message.innerHTML = `🎉 <span class="victory">Поздравляю!</span> Вы угадали число <span class="victory">${secretNumber}</span> за <span class="victory">${attempts}</span> попыток! 🎉`;
+                message.style.color = 'green';
+                guessInput.disabled = true;
+                gameActive = false;
+                
+                // Показываем финальный экран через 2 секунды
+                setTimeout(showFinalScreen, 2000);
+            } else if (guess < secretNumber) {
+                message.textContent = '📉 Слишком маленькое число! Попробуйте ещё.';
+                message.style.color = 'blue';
+            } else {
+                message.textContent = '📈 Слишком большое число! Попробуйте ещё.';
+                message.style.color = 'blue';
+            }
+            
+            attemptsElement.textContent = `Попытки: ${attempts}`;
+            previousGuessesElement.textContent = `Предыдущие попытки: ${previousGuesses.join(', ')}`;
+            
+            guessInput.value = '';
+            guessInput.focus();
+        }
+
+        // Обработка нажатия Enter
+        document.getElementById('guessInput').addEventListener('keypress', function(event) {
+            if (event.key === 'Enter') {
+                checkGuess();
+            }
+        });
+
+        // Начинаем с приветственного экрана
+        window.onload = showWelcomeScreen;
+    </script>
+</body>
+</html>
